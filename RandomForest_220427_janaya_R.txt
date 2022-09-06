@@ -1,0 +1,112 @@
+1. Agua
+2. Arbustos
+3. Bosque inundable
+4. Bosque tierra firme
+5. Cultivo
+6. Herbazal inundable
+7. Infraestructura
+8. Pasto
+9. Suelo
+
+#R version 4.1.2 (2021-05-18) -- "Camp Pontanezen"
+
+#Rtools40 MUST MUST MUST!!! be installed from R WEBpage		<---------
+#https://cran.r-project.org/bin/windows/Rtools/rtools40.html
+
+#Variable name: R_LIBS_USER 
+#Variable value: C:/Program Files/R/R-4.0.3/library
+
+#Install and Execute Rstudio as administrator
+
+install.packages("gower")
+install.packages("ipred")
+install.packages("data.table")
+install.packages("rgdal")
+install.packages("raster")
+install.packages("maptools")
+install.packages("e1071")
+install.packages("Rcpp")
+install.packages("randomForest")
+install.packages("caret")
+install.packages("rlang")
+install.packages("RStoolbox")
+#myPaths <- .libPaths()   # get the paths
+#myPaths <- c(myPaths[2], myPaths[1])  # switch them
+#.libPaths(myPaths)  # reassign them
+
+
+# Open required libraries
+library("rgdal")
+library("raster")
+library("maptools")
+library("randomForest")
+library("e1071")
+library("caret")
+library("RStoolbox")
+
+wd="g:/TEMP"
+setwd(wd)
+
+# Import data
+# No need to include .shp extension for shapefiles
+# It seems there is a installation problem with raster package in windows 10.
+?readOGR
+#See randomSelection.py to get 70% for training and 30% for validation (see web page, is for arcmap)
+#calib variable is to train the classifier, use Value field
+#valid variable is to compute the confussion matrix, use Value field.
+?
+require(rgdal)
+calib=readOGR(".", "Training_70_percent_point_value") #points
+valid<-readOGR(".", "Validate_30_percent_n820") #points
+---
+# -------->scale to 32 bit signed<----------
+require(raster)
+rastdata=stack("B2B3B4B5B6B7B8B8AB11B12vvVH_10M_220425.tif")
+
+# Perform supervised classification
+?superClass
+require(RStoolbox)
+supervised=superClass(rastdata, trainData=calib, responseCol="Value")         
+
+# Retrieve variable importance
+supervised$model$finalModel$importance
+
+# Validate classification
+accumatrix=confusionMatrix(factor(extract(supervised$map, valid)), factor(valid@data$Value))
+
+# Retrive accuracy results
+accumatrix$table # confusion marix
+accumatrix$overall # overall error
+accumatrix$byClass # accuracy per classes
+
+# Save classified map and classification object
+writeRaster(supervised$map, filename="class_B2B3B4B5B6B7B8B8AB11B12vvVH_10M_220427.tif")
+
+save(supervised, file="B2B3B4B5B6B7B8B8AB11B12vvVH_10M_220427.RData")
+
+# -------->scale to 32 bit signed<----------
+# -------->scale to 32 bit signed<----------
+require(raster)
+rastdata=stack("B2B3B4B5B6B7B8B8AB11B12vvVHsrtmSLOPE_10M_220425.TIF")
+
+# Perform supervised classification
+?superClass
+require(RStoolbox)
+supervised=superClass(rastdata, trainData=calib, responseCol="Value")         
+
+# Retrieve variable importance
+supervised$model$finalModel$importance
+
+# Validate classification
+accumatrix=confusionMatrix(factor(extract(supervised$map, valid)), factor(valid@data$Value))
+
+# Retrive accuracy results
+accumatrix$table # confusion marix
+accumatrix$overall # overall error
+accumatrix$byClass # accuracy per classes
+
+# Save classified map and classification object
+writeRaster(supervised$map, filename="class_B2B3B4B5B6B7B8B8AB11B12vvVHsrtmSLOPE_10M_220427.TIF")
+
+save(supervised, file="B2B3B4B5B6B7B8B8AB11B12vvVHsrtmSLOPE_10M_220427.RData")
+
